@@ -53,11 +53,13 @@ body {
 .bottom-row {
     display: flex;
     gap: 20px;
+    align-items: flex-start; /* <-- CAMBIO CLAVE: Evita que los gráficos se estiren */
 }
 
-/* Contenedor para el nuevo gráfico inferior */
+/* Contenedor para los gráficos inferiores */
 .bottom-chart-container {
-    width: 100%;
+    width: 32.5%; /* Ancho fijo y predecible */
+    min-width: 300px;
     background-color: white;
     padding: 20px;
     border-radius: 5px;

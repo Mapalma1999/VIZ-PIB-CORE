@@ -13,7 +13,8 @@ def create_layout(df):
             dcc.Dropdown(
                 id='country-dropdown',
                 options=country_options,
-                value=[df['Country'].iloc[0]], # Valor inicial como una lista
+                value=[],
+                placeholder="Seleccione uno o más países...",
                 clearable=False,
                 multi=True
             ),
@@ -47,10 +48,26 @@ def create_layout(df):
                 ])
             ]),
 
-            # --- Fila Inferior (para nuevos gráficos) ---
+            # --- Fila Inferior (con los 3 gráficos) ---
             html.Div(className='bottom-row', children=[
+                # Gráfico de dona
                 html.Div(className='bottom-chart-container', children=[
-                    dcc.Graph(id='gdp-distribution-pie') # <-- NUEVO GRÁFICO
+                    dcc.Graph(id='gdp-distribution-pie')
+                ]),
+                # Gráfico de barras de crecimiento por país
+                html.Div(className='bottom-chart-container', children=[
+                    dcc.Graph(id='growth-comparison-bar')
+                ]),
+                # Gráfico de barras de crecimiento por continente
+                html.Div(className='bottom-chart-container', children=[
+                    html.H4("Top Continentes por Crecimiento Anual"),
+                    dcc.RadioItems(
+                        id='continent-year-selector',
+                        options=[{'label': str(year), 'value': year} for year in range(2021, 2026)],
+                        value=2025, # Año por defecto
+                        inline=True
+                    ),
+                    dcc.Graph(id='continent-growth-bar')
                 ])
             ])
         ])
