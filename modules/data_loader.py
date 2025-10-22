@@ -1,16 +1,7 @@
 import pandas as pd
 
 def load_gdp_data(file_path):
-    """
-    Carga los datos del PIB desde un archivo CSV.
 
-    Args:
-        file_path (str): La ruta al archivo CSV.
-
-    Returns:
-        pandas.DataFrame: Un DataFrame con los datos del PIB,
-                          o None si el archivo no se encuentra.
-    """
     try:
         df = pd.read_csv(file_path)
         print(">>> Datos cargados exitosamente.")

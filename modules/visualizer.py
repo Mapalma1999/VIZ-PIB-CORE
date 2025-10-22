@@ -1,4 +1,4 @@
-from dash import html, dcc
+from dash import html, dcc, dash_table
 
 def create_layout(df):
     """
@@ -7,18 +7,33 @@ def create_layout(df):
     country_options = [{'label': country, 'value': country} for country in df['Country'].unique()]
 
     return html.Div(children=[
+       
         # --- Encabezado ---
         html.Div(className='header', children=[
-            html.H1('VIZ-PIB CORE - PIB por País (2020-2025)'),
-            dcc.Dropdown(
-                id='country-dropdown',
-                options=country_options,
-                value=[],
-                placeholder="Seleccione uno o más países...",
-                clearable=False,
-                multi=True
-            ),
-            html.Button('Aplicar', id='apply-button', n_clicks=0)
+            html.Div(className='header-title', children=[
+                html.H1('VIZ-PIB CORE - PIB por País (2020-2025)'),
+                # --- NUEVO INTERRUPTOR DE MÉTRICA ---
+                dcc.RadioItems(
+                    id='metric-selector',
+                    options=[
+                        {'label': 'PIB Total', 'value': 'total'},
+                        {'label': 'PIB Per Cápita', 'value': 'per_capita'}
+                    ],
+                    value='total', # Valor por defecto
+                    labelStyle={'display': 'inline-block', 'margin-right': '15px'}
+                )
+            ]),
+            html.Div(className='header-controls', children=[
+                dcc.Dropdown(
+                    id='country-dropdown',
+                    options=country_options,
+                    value=[],
+                    placeholder="Seleccione uno o más países...",
+                    clearable=False,
+                    multi=True
+                ),
+                html.Button('Aplicar', id='apply-button', n_clicks=0)
+            ])
         ]),
 
         # --- Cuerpo del Dashboard ---
@@ -48,27 +63,45 @@ def create_layout(df):
                 ])
             ]),
 
-            # --- Fila Inferior (con los 3 gráficos) ---
+            # --- Fila Intermedia ---
             html.Div(className='bottom-row', children=[
-                # Gráfico de dona
                 html.Div(className='bottom-chart-container', children=[
                     dcc.Graph(id='gdp-distribution-pie')
                 ]),
-                # Gráfico de barras de crecimiento por país
                 html.Div(className='bottom-chart-container', children=[
                     dcc.Graph(id='growth-comparison-bar')
                 ]),
-                # Gráfico de barras de crecimiento por continente
                 html.Div(className='bottom-chart-container', children=[
                     html.H4("Top Continentes por Crecimiento Anual"),
                     dcc.RadioItems(
                         id='continent-year-selector',
                         options=[{'label': str(year), 'value': year} for year in range(2021, 2026)],
-                        value=2025, # Año por defecto
+                        value=2025,
                         inline=True
                     ),
                     dcc.Graph(id='continent-growth-bar')
                 ])
+            ]),
+
+            # --- Fila de la Tabla de Datos ---
+            html.Div(className='data-table-row', children=[
+                html.H4("Tabla de Datos Completos"),
+                dash_table.DataTable(
+                    id='raw-data-table',
+                    # --- ESTOS SON LOS CAMBIOS CLAVE ---
+                    style_table={'height': '400px', 'overflowY': 'auto'},
+                    # ------------------------------------
+                    style_cell={'textAlign': 'left'},
+                    style_header={
+                        'backgroundColor': 'rgb(44, 62, 80)',
+                        'color': 'white',
+                        'fontWeight': 'bold'
+                    },
+                    style_data={
+                        'backgroundColor': 'rgb(248, 248, 248)',
+                        'color': 'black'
+                    }
+                )
             ])
         ])
     ])

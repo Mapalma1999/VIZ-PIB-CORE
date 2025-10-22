@@ -6,6 +6,7 @@ body {
     padding: 0;
 }
 
+
 /* Encabezado */
 .header {
     background-color: #2c3e50;
@@ -13,14 +14,27 @@ body {
     padding: 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between; /* Alinea los elementos a los extremos */
+}
+.header-title {
+    display: flex;
+    flex-direction: column; /* Apila el título y el selector */
+    gap: 10px;
+}
+.header-controls {
+    display: flex;
+    align-items: center;
     gap: 20px;
 }
 .header h1 {
     margin: 0;
-    flex-grow: 1;
+}
+/* Estiliza los RadioItems para que el texto sea blanco */
+.header .rc-radio-item label {
+    color: white;
 }
 .header .Select-control {
-    width: 250px;
+    width: 300px;
 }
 .header .Select-menu-outer {
     color: #333;
@@ -34,7 +48,7 @@ body {
     font-size: 16px;
 }
 
-/* Cuerpo del Dashboard */
+
 /* Cuerpo del Dashboard */
 .dashboard-body {
     padding: 20px;
@@ -94,6 +108,15 @@ body {
 /* Gráfico principal */
 .main-chart {
     width: 75%;
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+
+.data-table-row {
+    width: 100%;
     background-color: white;
     padding: 20px;
     border-radius: 5px;
