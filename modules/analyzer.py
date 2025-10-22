@@ -10,7 +10,10 @@ MANUAL_MAP = {
     'Bosnia and Herzegovina': 'Europe', 'North Macedonia': 'Europe',
     'Dominican Republic': 'North America', 'Equatorial Guinea': 'Africa',
     'Cote d\'Ivoire': 'Africa', 'Eswatini': 'Africa', 'Cabo Verde': 'Africa',
-    'Micronesia': 'Oceania', 'Marshall Islands': 'Oceania', 'kosovo': 'Europe'
+    'Micronesia': 'Oceania', 'Marshall Islands': 'Oceania',
+    'Curacao': 'North America', 'DR Congo': 'Africa', 'Reunion': 'Africa',
+    'Saint Barthelemy': 'North America', 'Sint Maarten': 'North America',
+    'Vatican City': 'Europe', 'Western Sahara': 'Africa', 'Kosovo': 'Europe'
 }
 
 def get_continent(country_name):
@@ -22,6 +25,8 @@ def get_continent(country_name):
         return pc.convert_continent_code_to_continent_name(continent_code)
     except:
         return 'Otros'
+   
+
 
 def analyze_country_gdp(df, country_name, metric_type='total'):
     prefix = 'GDP_' if metric_type == 'total' else 'GDP_per_capita_'
@@ -75,13 +80,23 @@ def analyze_world_data(df):
     metrics['world_total_gdp']['Año'] = metrics['world_total_gdp']['Año'].str.replace('GDP_', '')
     return metrics
 
+# --- FUNCIÓN DE DEPURACIÓN FINAL ---
 def analyze_continent_growth(df, year):
-    df_copy = df.copy()
+    """Calcula el crecimiento promedio, trabajando sobre una copia y reportando errores."""
+    df_copy = df.copy() 
     previous_year_col = f'GDP_{year - 1}'
     current_year_col = f'GDP_{year}'
     if previous_year_col not in df_copy.columns or current_year_col not in df_copy.columns:
         return pd.DataFrame()
+        
     df_copy['Continent'] = df_copy['Country'].apply(get_continent)
+    
+    # --- CÓDIGO DE DEPURACIÓN ---
+    unmapped_countries = df_copy[df_copy['Continent'] == 'Otros']['Country'].unique()
+    if len(unmapped_countries) > 0:
+        print("\n>>> Países que AÚN se clasifican como 'Otros' en el gráfico de continentes:", unmapped_countries)
+    # ----------------------------
+
     df_copy['Growth'] = (df_copy[current_year_col] - df_copy[previous_year_col]) / df_copy[previous_year_col] * 100
     continent_growth = df_copy.groupby('Continent')['Growth'].mean().reset_index()
     return continent_growth.sort_values(by='Growth', ascending=False)

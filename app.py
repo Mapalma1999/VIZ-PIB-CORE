@@ -19,6 +19,7 @@ app.layout = create_layout(df)
 # --- 3. Lógica de Interacción (Callbacks) ---
 
 # Callback para el contenido dinámico (KPIs y Gráfico Principal)
+# Callback para el contenido dinámico (KPIs y Gráfico Principal)
 @app.callback(
     Output('gdp-evolution-graph', 'figure'),
     Output('kpi-gdp-actual', 'children'),
@@ -30,9 +31,8 @@ app.layout = create_layout(df)
     Input('metric-selector', 'value')
 )
 def update_dynamic_content(n_clicks, selected_countries, metric_type):
-    # --- LÓGICA DE ESTADO INICIAL (VISTA MUNDIAL) ---
+    # --- Lógica de estado inicial (VISTA MUNDIAL) ---
     if n_clicks == 0:
-        # La vista mundial siempre usará el PIB Total
         world_metrics = analyze_world_data(df)
         fig_line = px.line(
             world_metrics['world_total_gdp'], x='Año', y='PIB (Billones USD)',
@@ -55,7 +55,15 @@ def update_dynamic_content(n_clicks, selected_countries, metric_type):
         return empty_fig, "N/A", "N/A", "N/A", "N/A"
 
     comparison_df = df[df['Country'].isin(selected_countries)]
-    gdp_cols = [col for col in df.columns if col.startswith(prefix)]
+    
+    # --- CORRECCIÓN CLAVE AQUÍ ---
+    if metric_type == 'total':
+        # Selecciona solo las columnas de PIB Total, excluyendo per cápita
+        gdp_cols = [col for col in df.columns if col.startswith(prefix) and 'per_capita' not in col]
+    else:
+        # Para per cápita, la lógica original era correcta
+        gdp_cols = [col for col in df.columns if col.startswith(prefix)]
+    # -----------------------------
     
     melted_df = comparison_df.melt(id_vars=['Country'], value_vars=gdp_cols, var_name='Año', value_name=y_axis_label)
     melted_df['Año'] = melted_df['Año'].str.replace(prefix, '').str.replace('_', ' ')
