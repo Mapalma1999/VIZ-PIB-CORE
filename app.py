@@ -14,6 +14,7 @@ df = prepare_merged_data(GDP_DATA_PATH, POP_DATA_PATH)
 
 # --- 2. Inicializar la Aplicación Dash ---
 app = dash.Dash(__name__)
+server = app.server
 app.layout = create_layout(df)
 
 # --- 3. Lógica de Interacción (Callbacks) ---
@@ -89,6 +90,7 @@ def update_dynamic_content(n_clicks, selected_countries, metric_type):
     return fig_line, kpi_actual, kpi_max, kpi_min, kpi_growth
 
 # Callback para el contenido "estático"
+# Callback para el contenido "estático" (no depende del selector de métrica)
 @app.callback(
     Output('gdp-distribution-pie', 'figure'),
     Output('growth-comparison-bar', 'figure'),
@@ -98,9 +100,33 @@ def update_dynamic_content(n_clicks, selected_countries, metric_type):
     State('country-dropdown', 'value')
 )
 def update_static_content(n_clicks, selected_countries):
-    table_data = df.to_dict('records')
-    table_columns = [{"name": i, "id": i} for i in df.columns]
+    # --- LÓGICA CORREGIDA PARA LA TABLA DE DATOS ---
+    # 1. Crea una copia limpia para trabajar
+    df_for_table = df.copy()
+
+    # 2. Rellena cualquier celda vacía con "N/A"
+    df_for_table.fillna('N/A', inplace=True)
+
+    # 3. Formatea las columnas numéricas para que sean texto legible
+    total_gdp_cols = [col for col in df_for_table.columns if col.startswith('GDP_') and 'per_capita' not in col]
+    per_capita_cols = [col for col in df_for_table.columns if col.startswith('GDP_per_capita_')]
+
+    # Formatea las columnas de PIB Total (ej: 1,234.56 B)
+    for col in total_gdp_cols:
+        df_for_table[col] = df_for_table[col].apply(lambda x: f'{x:,.2f} B' if isinstance(x, (int, float)) else x)
     
+    # Formatea las columnas de PIB Per Cápita (ej: $54,321)
+    for col in per_capita_cols:
+        df_for_table[col] = df_for_table[col].apply(lambda x: f'${x:,.0f}' if isinstance(x, (int, float)) else x)
+    
+    # Formatea la columna de Población (ej: 1,234,567)
+    if 'Population' in df_for_table.columns:
+        df_for_table['Population'] = df_for_table['Population'].apply(lambda x: f'{x:,.0f}' if isinstance(x, (int, float)) else x)
+
+    table_data = df_for_table.to_dict('records')
+    table_columns = [{"name": i, "id": i} for i in df_for_table.columns]
+    
+    # --- Lógica de los gráficos (sin cambios) ---
     df_2025 = df.sort_values(by='GDP_2025', ascending=False)
     top_5 = df_2025.head(5)
     others_gdp = df_2025.iloc[5:]['GDP_2025'].sum()
@@ -108,13 +134,7 @@ def update_static_content(n_clicks, selected_countries):
     plot_df_pie = pd.concat([top_5, others_row_df], ignore_index=True)
     fig_pie = px.pie(plot_df_pie, names='Country', values='GDP_2025', title='Distribución GDP Mundial 2025 (Total)', hole=0.4)
 
-    if n_clicks == 0:
-        world_metrics = analyze_world_data(df)
-        fig_bar = px.bar(
-            world_metrics['world_growth_data'], x='Año', y='Crecimiento (%)',
-            title='Crecimiento Anual del PIB Mundial (%)'
-        )
-    elif not selected_countries:
+    if n_clicks == 0 or not selected_countries:
         fig_bar = px.bar(title='Comparación de Crecimiento Anual (%)')
     else:
         comparison_df = df[df['Country'].isin(selected_countries)]
