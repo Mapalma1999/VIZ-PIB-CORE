@@ -1,124 +1,219 @@
-/* Estilo general del cuerpo */
+/* Fondo global y tipografía */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f2f5;
-    margin: 0;
-    padding: 0;
+    background-color: #0B111A !important;
+    color: #E0F7FA !important;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-
-/* Encabezado */
-.header {
-    background-color: #2c3e50;
-    color: white;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Alinea los elementos a los extremos */
-}
-.header-title {
-    display: flex;
-    flex-direction: column; /* Apila el título y el selector */
-    gap: 10px;
-}
-.header-controls {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-.header h1 {
-    margin: 0;
-}
-/* Estiliza los RadioItems para que el texto sea blanco */
-.header .rc-radio-item label {
-    color: white;
-}
-.header .Select-control {
-    width: 300px;
-}
-.header .Select-menu-outer {
-    color: #333;
-}
-.header button {
-    padding: 10px 20px;
-    background-color: #27ae60;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
+/* Navbar */
+.navbar {
+    background-color: #0D192B !important;
+    border-bottom: 1px solid #00E5FF !important;
 }
 
-
-/* Cuerpo del Dashboard */
-.dashboard-body {
-    padding: 20px;
-    display: flex;
-    flex-direction: column; /* Apila las filas verticalmente */
-    gap: 20px;
+.navbar h2 {
+    color: #00E5FF !important;
+    letter-spacing: 1px;
+    font-weight: 700;
 }
 
-/* Fila Superior */
-.top-row {
-    display: flex;
-    gap: 20px;
+/* Botones */
+.btn-primary {
+    background: linear-gradient(90deg, #00BCD4, #00E5FF) !important;
+    border: none !important;
+    color: #0B111A !important;
+    font-weight: 600;
+    transition: 0.3s;
 }
 
-/* Fila Inferior */
-.bottom-row {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start; /* <-- CAMBIO CLAVE: Evita que los gráficos se estiren */
+.btn-primary:hover {
+    background: linear-gradient(90deg, #26C6DA, #18FFFF) !important;
+    transform: scale(1.03);
 }
 
-/* Contenedor para los gráficos inferiores */
-.bottom-chart-container {
-    width: 32.5%; /* Ancho fijo y predecible */
-    min-width: 300px;
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Radio buttons y dropdowns */
+.custom-control-label, .form-check-label, .Select-control, .Select-menu-outer {
+    color: #E0F7FA !important;
 }
 
-/* Barra lateral de KPIs */
-.kpi-sidebar {
-    width: 25%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.Select--multi .Select-value {
+    background-color: #003D57 !important;
+    border: 1px solid #00BCD4 !important;
+    color: #E0F7FA !important;
 }
-.kpi-card {
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+/* Tarjetas (Cards) */
+.card {
+    background-color: #121A24 !important;
+    border: 1px solid #00BCD4 !important;
+    border-radius: 14px !important;
+    transition: 0.3s;
 }
-.kpi-card h3 {
-    margin-top: 0;
-    font-size: 1em;
-    color: #555;
+
+.card:hover {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
 }
-.kpi-card p {
-    font-size: 2em;
+
+/* Títulos KPI */
+.card-title {
+    color: #26C6DA !important;
+}
+
+.card-text {
+    color: #FFFFFF !important;
     font-weight: bold;
-    margin-bottom: 0;
-    color: #2c3e50;
 }
 
-/* Gráfico principal */
-.main-chart {
-    width: 75%;
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Gráficos */
+.js-plotly-plot .plotly .main-svg {
+    background-color: transparent !important;
 }
 
+/* Tabla */
+.dash-table-container {
+    border-radius: 10px;
+}
 
-.data-table-row {
-    width: 100%;
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.dash-table-container .dash-spreadsheet-container {
+    border: 1px solid #00BCD4;
+}
+
+/* Slider */
+.rc-slider-track {
+    background-color: #00E5FF !important;
+}
+.rc-slider-handle {
+    border: 2px solid #00E5FF !important;
+    background-color: #0B111A !important;
+}
+
+/* Links y acentos */
+a, a:hover {
+    color: #00E5FF !important;
+}
+
+/* Fondo del menú desplegable */
+.Select-menu-outer {
+    background-color: #0F1824 !important; /* fondo oscuro */
+    border: 1px solid #00BCD4 !important;
+}
+
+/* Elementos del menú (cada opción) */
+.VirtualizedSelectOption {
+    background-color: #0F1824 !important;
+    color: #E0F7FA !important;
+}
+
+.VirtualizedSelectOption:hover {
+    background-color: #003D57 !important;
+    color: #00E5FF !important;
+}
+
+/* Caja principal del dropdown (input + valores seleccionados) */
+.Select-control {
+    background-color: #0B111A !important;
+    border: 1px solid #00BCD4 !important;
+    color: #E0F7FA !important;
+}
+
+/* Texto dentro del dropdown */
+.Select-value-label {
+    color: #E0F7FA !important;
+}
+
+/* Placeholder */
+.Select-placeholder {
+    color: #80DEEA !important;
+}
+
+/* Texto del input cuando se escribe */
+.Select-input > input {
+    color: #E0F7FA !important;
+}
+
+/* Etiquetas de países seleccionados */
+.Select--multi .Select-value {
+    background-color: #003D57 !important;
+    border: 1px solid #00E5FF !important;
+    color: #E0F7FA !important;
+}
+
+/* Cerrar (x) de las etiquetas */
+.Select-value-icon {
+    color: #00E5FF !important;
+}
+.Select-value-icon:hover {
+    background-color: #00E5FF !important;
+    color: #0B111A !important;
+}
+
+/* ---- Tema general ---- */
+body {
+    background-color: #0d1b2a; /* Fondo principal oscuro */
+    color: #E0F7FA; /* Texto general en cian claro */
+}
+
+/* ---- Títulos ---- */
+h1, h2, h3, h4, h5 {
+    color: #00E5FF; /* Azul-cian brillante para títulos */
+    font-weight: 700;
+}
+
+/* ---- Subtítulos y etiquetas ---- */
+label, .control-label, p, span {
+    color: #B2EBF2; /* Cian suave */
+}
+
+/* ---- Bordes de tarjetas ---- */
+.card, .dccGraph, .table-container {
+    border: 1px solid #00BCD4;
+    border-radius: 10px;
+}
+
+/* ---- Inputs, dropdowns y botones ---- */
+.Select-control, .Select-menu-outer {
+    background-color: #13293D !important;
+    color: white !important;
+}
+
+.Select-option {
+    background-color: #13293D !important;
+    color: #E0F7FA !important;
+}
+
+.Select-option.is-focused {
+    background-color: #00BCD4 !important;
+    color: #0D1B2A !important;
+}
+
+button, .btn {
+    background-color: #00BCD4 !important;
+    color: #0D1B2A !important;
+    font-weight: bold;
+    border-radius: 6px;
+}
+
+button:hover, .btn:hover {
+    background-color: #26C6DA !important;
+}
+
+/* ---- Tabla ---- */
+table {
+    background-color: #0d1b2a;
+    color: #E0F7FA;
+}
+
+th {
+    color: #00E5FF;
+    font-weight: bold;
+    background-color: #13293D;
+}
+
+td {
+    color: #E0F7FA;
+    background-color: #112A3C;
+}
+
+tr:hover td {
+    background-color: #184a6d;
 }

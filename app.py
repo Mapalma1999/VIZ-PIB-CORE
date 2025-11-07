@@ -2,6 +2,7 @@ import dash
 from dash import dcc, html, Input, Output, State, dash_table
 import plotly.express as px
 import pandas as pd
+import dash_bootstrap_components as dbc 
 
 from modules.data_preparer import prepare_merged_data
 from modules.analyzer import analyze_country_gdp, analyze_comparison, analyze_world_data, analyze_continent_growth
@@ -9,17 +10,20 @@ from modules.visualizer import create_layout
 
 # --- 1. Cargar y Preparar Datos ---
 GDP_DATA_PATH = 'data/2020-2025.csv'
-POP_DATA_PATH = 'data/world_population.csv'
+POP_DATA_PATH = 'data/world_population.csv' 
 df = prepare_merged_data(GDP_DATA_PATH, POP_DATA_PATH)
 
 # --- 2. Inicializar la Aplicación Dash ---
-app = dash.Dash(__name__)
+# --- CAMBIO: Se cambia el tema a DARKLY para el modo oscuro ---
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
 server = app.server
 app.layout = create_layout(df)
 
 # --- 3. Lógica de Interacción (Callbacks) ---
 
-# Callback para el contenido dinámico (KPIs y Gráfico Principal)
+# Variable global para el template de Plotly
+PLOTLY_TEMPLATE = "plotly_dark"
+
 # Callback para el contenido dinámico (KPIs y Gráfico Principal)
 @app.callback(
     Output('gdp-evolution-graph', 'figure'),
@@ -32,13 +36,17 @@ app.layout = create_layout(df)
     Input('metric-selector', 'value')
 )
 def update_dynamic_content(n_clicks, selected_countries, metric_type):
+    
     # --- Lógica de estado inicial (VISTA MUNDIAL) ---
     if n_clicks == 0:
         world_metrics = analyze_world_data(df)
         fig_line = px.line(
             world_metrics['world_total_gdp'], x='Año', y='PIB (Billones USD)',
-            title='Evolución del PIB Mundial Total', markers=True
+            title='Evolución del PIB Mundial Total', markers=True,
+            template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
         )
+        fig_line.update_layout(margin=dict(l=20, r=20, t=40, b=20))
+        
         kpi_actual = f"Mundial: {world_metrics['gdp_actual']:,.0f} B"
         kpi_max = f"Mundial: {world_metrics['max_gdp']['value']:,.0f} B"
         kpi_min = f"Mundial: {world_metrics['min_gdp']['value']:,.0f} B"
@@ -52,23 +60,27 @@ def update_dynamic_content(n_clicks, selected_countries, metric_type):
     value_format = '{:,.2f} B' if metric_type == 'total' else '${:,.0f}'
 
     if not selected_countries:
-        empty_fig = px.line(title='Seleccione países y presione "Aplicar"')
+        empty_fig = px.line(
+            title='Seleccione países y presione "Aplicar"', 
+            template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+        ) 
         return empty_fig, "N/A", "N/A", "N/A", "N/A"
 
     comparison_df = df[df['Country'].isin(selected_countries)]
     
-    # --- CORRECCIÓN CLAVE AQUÍ ---
     if metric_type == 'total':
-        # Selecciona solo las columnas de PIB Total, excluyendo per cápita
         gdp_cols = [col for col in df.columns if col.startswith(prefix) and 'per_capita' not in col]
     else:
-        # Para per cápita, la lógica original era correcta
         gdp_cols = [col for col in df.columns if col.startswith(prefix)]
-    # -----------------------------
     
     melted_df = comparison_df.melt(id_vars=['Country'], value_vars=gdp_cols, var_name='Año', value_name=y_axis_label)
     melted_df['Año'] = melted_df['Año'].str.replace(prefix, '').str.replace('_', ' ')
-    fig_line = px.line(melted_df, x='Año', y=y_axis_label, color='Country', title=f'Evolución del {title_suffix}', markers=True)
+    
+    fig_line = px.line(
+        melted_df, x='Año', y=y_axis_label, color='Country', 
+        title=f'Evolución del {title_suffix}', markers=True,
+        template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+    )
     fig_line.update_layout(margin=dict(l=20, r=20, t=40, b=20), legend_title_text='Países')
     
     if len(selected_countries) == 1:
@@ -90,7 +102,6 @@ def update_dynamic_content(n_clicks, selected_countries, metric_type):
     return fig_line, kpi_actual, kpi_max, kpi_min, kpi_growth
 
 # Callback para el contenido "estático"
-# Callback para el contenido "estático" (no depende del selector de métrica)
 @app.callback(
     Output('gdp-distribution-pie', 'figure'),
     Output('growth-comparison-bar', 'figure'),
@@ -100,42 +111,52 @@ def update_dynamic_content(n_clicks, selected_countries, metric_type):
     State('country-dropdown', 'value')
 )
 def update_static_content(n_clicks, selected_countries):
-    # --- LÓGICA CORREGIDA PARA LA TABLA DE DATOS ---
-    # 1. Crea una copia limpia para trabajar
-    df_for_table = df.copy()
+    # --- Lógica de la tabla ---
+    table_df = df.copy()
+    if 'Continent' in table_df.columns:
+        table_df = table_df.drop(columns=['Continent'])
 
-    # 2. Rellena cualquier celda vacía con "N/A"
-    df_for_table.fillna('N/A', inplace=True)
+    total_gdp_cols = [col for col in table_df.columns if col.startswith('GDP_') and 'per_capita' not in col]
+    per_capita_cols = [col for col in table_df.columns if col.startswith('GDP_per_capita_')]
+    pop_cols = [col for col in table_df.columns if col.startswith('Population')]
 
-    # 3. Formatea las columnas numéricas para que sean texto legible
-    total_gdp_cols = [col for col in df_for_table.columns if col.startswith('GDP_') and 'per_capita' not in col]
-    per_capita_cols = [col for col in df_for_table.columns if col.startswith('GDP_per_capita_')]
-
-    # Formatea las columnas de PIB Total (ej: 1,234.56 B)
     for col in total_gdp_cols:
-        df_for_table[col] = df_for_table[col].apply(lambda x: f'{x:,.2f} B' if isinstance(x, (int, float)) else x)
-    
-    # Formatea las columnas de PIB Per Cápita (ej: $54,321)
+        table_df[col] = table_df[col].apply(lambda x: f'{x:,.2f} B' if pd.notna(x) else x)
     for col in per_capita_cols:
-        df_for_table[col] = df_for_table[col].apply(lambda x: f'${x:,.0f}' if isinstance(x, (int, float)) else x)
-    
-    # Formatea la columna de Población (ej: 1,234,567)
-    if 'Population' in df_for_table.columns:
-        df_for_table['Population'] = df_for_table['Population'].apply(lambda x: f'{x:,.0f}' if isinstance(x, (int, float)) else x)
+        table_df[col] = table_df[col].apply(lambda x: f'${x:,.0f}' if pd.notna(x) else x)
+    for col in pop_cols:
+            table_df[col] = table_df[col].apply(lambda x: f'{x:,.0f}' if pd.notna(x) else x)
 
-    table_data = df_for_table.to_dict('records')
-    table_columns = [{"name": i, "id": i} for i in df_for_table.columns]
+    table_df.fillna('N/A', inplace=True)
     
-    # --- Lógica de los gráficos (sin cambios) ---
+    table_data = table_df.to_dict('records')
+    table_columns = [{"name": i, "id": i} for i in table_df.columns]
+    
+    # --- Lógica de los gráficos ---
     df_2025 = df.sort_values(by='GDP_2025', ascending=False)
     top_5 = df_2025.head(5)
     others_gdp = df_2025.iloc[5:]['GDP_2025'].sum()
     others_row_df = pd.DataFrame([{'Country': 'Otros', 'GDP_2025': others_gdp}])
     plot_df_pie = pd.concat([top_5, others_row_df], ignore_index=True)
-    fig_pie = px.pie(plot_df_pie, names='Country', values='GDP_2025', title='Distribución GDP Mundial 2025 (Total)', hole=0.4)
+    
+    fig_pie = px.pie(
+        plot_df_pie, names='Country', values='GDP_2025', 
+        title='Distribución GDP Mundial 2025 (Total)', hole=0.4,
+        template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+    ) 
 
-    if n_clicks == 0 or not selected_countries:
-        fig_bar = px.bar(title='Comparación de Crecimiento Anual (%)')
+    if n_clicks == 0:
+        world_metrics = analyze_world_data(df)
+        fig_bar = px.bar(
+            world_metrics['world_growth_data'], x='Año', y='Crecimiento (%)',
+            title='Crecimiento Anual del PIB Mundial (%)',
+            template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+        )
+    elif not selected_countries:
+        fig_bar = px.bar(
+            title='Comparación de Crecimiento Anual (%)', 
+            template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+        )
     else:
         comparison_df = df[df['Country'].isin(selected_countries)]
         gdp_cols = [col for col in df.columns if col.startswith('GDP_') and 'per_capita' not in col]
@@ -143,7 +164,12 @@ def update_static_content(n_clicks, selected_countries):
         growth_df['Country'] = comparison_df['Country']
         melted_growth_df = growth_df.melt(id_vars=['Country'], value_vars=[col for col in gdp_cols if col != 'GDP_2020'], var_name='Año', value_name='Crecimiento (%)')
         melted_growth_df['Año'] = melted_growth_df['Año'].str.replace('GDP_', '')
-        fig_bar = px.bar(melted_growth_df, x='Año', y='Crecimiento (%)', color='Country', barmode='group', title='Comparación de Crecimiento Anual (%)')
+        
+        fig_bar = px.bar(
+            melted_growth_df, x='Año', y='Crecimiento (%)', color='Country', 
+            barmode='group', title='Comparación de Crecimiento Anual (%)',
+            template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+        )
     
     return fig_pie, fig_bar, table_data, table_columns
 
@@ -154,10 +180,37 @@ def update_static_content(n_clicks, selected_countries):
 )
 def update_continent_growth(selected_year):
     continent_growth_df = analyze_continent_growth(df, selected_year)
-    fig_continent = px.bar(continent_growth_df, x='Growth', y='Continent', orientation='h', title=f"Crecimiento Promedio por Continente ({selected_year})")
+    fig_continent = px.bar(
+        continent_growth_df, x='Growth', y='Continent', orientation='h', 
+        title=f"Crecimiento Promedio por Continente ({selected_year})",
+        template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+    )
     fig_continent.update_layout(margin=dict(l=20, r=20, t=40, b=20), yaxis={'categoryorder':'total ascending'})
     fig_continent.update_traces(text=continent_growth_df['Growth'].apply(lambda x: f'{x:.2f}%'), textposition='outside')
     return fig_continent
+
+# Callback para el Mapa de Calor de Población
+@app.callback(
+    Output('population-heatmap', 'figure'),
+    Input('map-year-slider', 'value')
+)
+def update_population_map(selected_year):
+    pop_col_map = f'Population_{selected_year}'
+    map_data = df.dropna(subset=['CCA3', pop_col_map])
+    fig_map = px.choropleth(
+        map_data,
+        locations="CCA3",
+        color=pop_col_map,
+        hover_name="Country",
+        color_continuous_scale=px.colors.sequential.Viridis,
+        title=f"Concentración de Población Mundial en {selected_year}",
+        template=PLOTLY_TEMPLATE # CAMBIO: Template oscuro
+    )
+    fig_map.update_layout(
+        geo=dict(showframe=False, showcoastlines=False),
+        margin={"r":0,"t":40,"l":0,"b":0}
+    )
+    return fig_map
 
 if __name__ == '__main__':
     app.run(debug=True)
